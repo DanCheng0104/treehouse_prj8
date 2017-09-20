@@ -23,6 +23,7 @@
     "gulp-connect": "^5.0.0",
     "gulp-csso": "^3.0.0",
     "gulp-imagemin": "^3.3.0",
+    "gulp-livereload": "^3.8.1",
     "gulp-rename": "^1.2.2",
     "gulp-replace": "^0.6.1",
     "gulp-sass": "^3.1.0",

@@ -1,34 +1,33 @@
 "use strict";
 
 const gulp = require('gulp'),
-	rename = require('gulp-rename'),
-  concat = require('gulp-concat'),
-  uglify = require('gulp-uglify'),
-  sass = require('gulp-sass'),
-   maps = require('gulp-sourcemaps'),
-   csso = require('gulp-csso'),
-  del = require('del'),
-  connect = require('gulp-connect'),
-  imagemin = require('gulp-imagemin'),
-  replace = require('gulp-replace'),
-  useref = require('gulp-useref');
+	    rename = require('gulp-rename'),
+      concat = require('gulp-concat'),
+      uglify = require('gulp-uglify'), 
+      sass = require('gulp-sass'), 
+      maps = require('gulp-sourcemaps'), 
+      csso = require('gulp-csso'), 
+      del = require('del'), 
+      connect = require('gulp-connect'), 
+      imagemin = require('gulp-imagemin'), 
+      replace = require('gulp-replace'), 
+      livereload = require('gulp-livereload'), 
+      useref = require('gulp-useref'); 
 
-//As a developer, I should be able to run the gulp scripts command at the command line to concatenate, minify, and copy 
-//all of the project’s JavaScript files into an all.min.js file that is then copied to the dist/scripts folder
-
-//gulp.task('script')
 
 const options = {
   jsFiles: 'js/**/*.js',
   jsDest: 'dist/scripts',
   styleDest: 'dist/styles',
-  contentDest: 'dist/content'
+  contentDest: 'dist/content',
+  sassFiles: ['sass/**/**/*','sass/*']
 };
-//As a developer, I should be able to run the gulp clean command at the command line to 
+
+
 //delete all of the files and folders in the dist folder.
 gulp.task('clean', ()=>del(['dist/**/*']));
 
-
+//concatenate, minify, and copy all of the project’s JavaScript files into an all.min.js file that is then copied to the dist/scripts folder
 gulp.task('scripts', () => {
     return gulp.src(options.jsFiles)
     				.pipe(maps.init())
@@ -39,7 +38,7 @@ gulp.task('scripts', () => {
        			.pipe(gulp.dest(options.jsDest));
 });
 
-//As a developer, I should be able to run the gulp styles command at the command line to 
+
 //compile the project’s SCSS files into CSS, then concatenate and minify into an all.min.css file 
 //that is then copied to the dist/styles folder.
 
@@ -50,11 +49,11 @@ gulp.task('styles', () => {
       .pipe(csso())
       .pipe(rename('all.min.css'))
       .pipe(maps.write('./'))
-      .pipe(gulp.dest(options.styleDest));
+      .pipe(gulp.dest(options.styleDest))
+      .pipe(livereload());
 });
 
-//As a developer, I should be able to run the gulp images command at the command line to optimize 
-//the size of the project’s JPEG and PNG files, and then copy those optimized images to the dist/content folder.
+//optimize the size of the project’s JPEG and PNG files, and then copy those optimized images to the dist/content folder.
 
 gulp.task('images', () =>
     gulp.src('images/*')
@@ -62,19 +61,9 @@ gulp.task('images', () =>
         .pipe(gulp.dest(options.contentDest))
 );
 
-//As a developer, I should be able to run the gulp build command at the command 
-//line to run the clean, scripts, styles, and images tasks with confidence that 
-//the clean task completes before the other commands.
-// gulp.task('connect', connect.server({
-//     root: 'dist',
-//     port: 3000,
-//     livereload: true
-//     // open: {
-//     //     file: 'index.html'
-//     // }
-// }));
+//start the web server
 
-gulp.task('connectDist', function () {
+gulp.task('connectDist', ()=> {
   connect.server({
     name: 'Dist App',
     root: 'dist',
@@ -83,10 +72,23 @@ gulp.task('connectDist', function () {
   });
 });
 
-gulp.task("build", ['clean','scripts','styles','images','connectDist'], function() {
+//watch for changes to any .scss file in my project. When there is a change to 
+//one of the .scss files, the gulp styles command is run and the files are compiled,
+// concatenated, and minified to the dist folder. My project should then reload in the 
+//browser, displaying the changes.
+
+gulp.task('watch',()=> {
+  livereload.listen();
+    gulp.watch(options.sassFiles,['styles']);
+});
+
+//copy everything to dist folder 
+gulp.task("build", ['clean','scripts','styles','images'],()=> {
   return gulp.src(['index.html',
                    "icons/**"], { base: './'})
    .pipe(replace('images/', 'content/'))
             .pipe(gulp.dest('dist'));
-   //gulp.start('connect');
 });
+
+gulp.task("default",['build','connectDist','watch'])
+
