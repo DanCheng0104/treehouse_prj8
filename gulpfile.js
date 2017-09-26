@@ -12,7 +12,8 @@ const gulp = require('gulp'),
       imagemin = require('gulp-imagemin'), 
       replace = require('gulp-replace'), 
       livereload = require('gulp-livereload'), 
-      useref = require('gulp-useref'); 
+      useref = require('gulp-useref'),
+      runSequence = require('run-sequence');
 
 
 const options = {
@@ -25,7 +26,9 @@ const options = {
 
 
 //delete all of the files and folders in the dist folder.
-gulp.task('clean', ()=>del(['dist/**/*']));
+gulp.task('clean', ()=>{
+  return del(['dist/**/*'])
+});
 
 //concatenate, minify, and copy all of the project’s JavaScript files into an all.min.js file that is then copied to the dist/scripts folder
 gulp.task('scripts', () => {
@@ -55,19 +58,19 @@ gulp.task('styles', () => {
 
 //optimize the size of the project’s JPEG and PNG files, and then copy those optimized images to the dist/content folder.
 
-gulp.task('images', () =>
-    gulp.src('images/*')
+gulp.task('images', () =>{
+  return gulp.src('images/*')
         .pipe(imagemin())
         .pipe(gulp.dest(options.contentDest))
-);
+});
 
 //start the web server
 
 gulp.task('connectDist', ()=> {
-  connect.server({
+   connect.server({
     name: 'Dist App',
     root: 'dist',
-    port: 3000,
+    port: 3001,
     livereload: true
   });
 });
@@ -83,12 +86,15 @@ gulp.task('watch',()=> {
 });
 
 //copy everything to dist folder 
-gulp.task("build", ['clean','scripts','styles','images'],()=> {
+gulp.task("build", ['clean'],(callback)=> {
+  runSequence('scripts','styles','images'); 
   return gulp.src(['index.html',
                    "icons/**"], { base: './'})
    .pipe(replace('images/', 'content/'))
             .pipe(gulp.dest('dist'));
 });
 
-gulp.task("default",['build','connectDist','watch'])
+gulp.task("default",['build'],()=>{
+  runSequence('connectDist','watch');
+})
 
